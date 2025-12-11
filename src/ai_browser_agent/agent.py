@@ -1,7 +1,9 @@
 from asyncio import get_event_loop
-from llm import LLM
 from json import dumps
 import inspect
+
+from app.ports.browser import BrowserPort
+from app.ports.llm import LLMPort
 
 
 class AIAgent:
@@ -9,12 +11,12 @@ class AIAgent:
     Класс ИИ агента выполняющего задания в браузере
     """
 
-    def __init__(self, browser):
+    def __init__(self, browser_adapter: BrowserPort, llm_adapter: LLMPort):
         """
         Определяем правила игры
         """
-        self.browser = browser
-        self.model = LLM()
+        self.browser = browser_adapter
+        self.llm_adapter = llm_adapter
         self.loop = get_event_loop()
 
         self.context = {
@@ -22,11 +24,11 @@ class AIAgent:
             "user_task": '',
             "current_goal": '',
             "step_history": [],
-            "page":browser.page_context
+            "page": browser_adapter.page_context
         }
 
     async def start(self):
-        await self.browser.launch(self.model)
+        await self.browser.launch(self.llm_adapter)
         await self.start_chat()
 
     async def start_chat(self):
@@ -176,7 +178,7 @@ class AIAgent:
         """
         self.say('Думаю...')
         await self.browser.wait(2000)
-        response = await self.model.send(message)
+        response = await self.llm_adapter.send(message)
         return response
 
     async def wait_human(self, favour):
@@ -190,7 +192,7 @@ class AIAgent:
              сообщение пользователя:{message}
             """
 
-            response = await self.model.send(prompt)
+            response = await self.llm_adapter.send(prompt)
             if response == "True":
                 favour_is_responding = True
 
@@ -228,7 +230,6 @@ class AIAgent:
     def update_context(self, context):
         for el, val in context.items():
             self.context[el] = val
-
 
     async def get_plan(self, task):
         plan_making_prompt = f"""

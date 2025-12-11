@@ -1,11 +1,11 @@
-"""The main entry point. Invoke as `ai_agent' or `python -m ai_agent`, also composition root
+"""The main entry point. Invoke as `ai_agent' or `python -m ai_agent`
 
 """
 
 
 async def main():
     try:
-        from core import main
+        from composition import main
         exit_status = main()
     except KeyboardInterrupt:
         exit_status = "Turn off agent"
