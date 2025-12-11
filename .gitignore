@@ -1,3 +1,6 @@
-../.idea/
+.idea/
 .ai_agent_venv/
 *pycache*
+.env
+.venv
+*egg-info*
