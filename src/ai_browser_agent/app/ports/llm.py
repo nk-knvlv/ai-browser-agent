@@ -1,18 +1,19 @@
 from abc import ABC, abstractmethod
+from typing import Protocol
 
 
-class LLMPort(ABC):
+class LLMPort(Protocol):
     """Абстрактный порт для работы с браузером"""
+    model_name:str
     api_key:str
 
-    @abstractmethod
-    def __init__(self, model_name:str,api_key: str):
+    async def send(self, message: str) -> str:
+        """Отправляет запрос llm и получает ответ"""
         pass
 
-    @abstractmethod
-    def send(self, message: str) -> str:
+    async def close(self):
+        """Закрывает соединение с клиентом llm"""
         pass
 
-    @abstractmethod
-    def close(self):
+    async def test(self)->bool:
         pass

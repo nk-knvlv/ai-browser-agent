@@ -1,5 +1,5 @@
 from ai_browser_agent.app.ports.llm import LLMPort
-from google.genai import Client
+from google.genai import Client, types
 
 
 class GeminiLLMAdapter(LLMPort):
@@ -13,15 +13,25 @@ class GeminiLLMAdapter(LLMPort):
 
     async def send(self, message):
         response = self.client.models.generate_content(
-            model=self.model_name, contents=message
+            model=self.model_name,
+            contents=message,
+            config=types.GenerateContentConfig(
+                thinking_config=types.ThinkingConfig(thinking_budget=-1)
+            ),
         )
         return response.text
 
     async def test(self):
         response = self.client.models.generate_content(
-            model=self.model_name, contents='what is tests for project'
+            model=self.model_name,
+            contents='return only one word True if you work normal',
+            config=types.GenerateContentConfig(
+                thinking_config=types.ThinkingConfig(thinking_budget=0)
+            ),
         )
-        return response.text
+        if response.text == 'True':
+            return True
+        raise Exception(response)
 
     async def close(self):
         self.client.close()

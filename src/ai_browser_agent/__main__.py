@@ -4,11 +4,14 @@
 
 
 async def main():
+    from asyncio.exceptions import CancelledError
     try:
-        from composition import main
-        exit_status = main()
-    except KeyboardInterrupt:
+        from ai_browser_agent.composition import main
+        exit_status = await main()
+    except (CancelledError, KeyboardInterrupt):
         exit_status = "Turn off agent"
+    except Exception as e:
+        exit_status = f'Ошибка: {e}'
 
     return exit_status
 
