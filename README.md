@@ -47,9 +47,6 @@ python -m venv .venv
 .\.venv\Scripts\activate
 
 pip install -r requirements.txt
-
-#run 
-python -m ai_browser_agent
 ```
 
 ### 4. Create a .env file in the project root:
@@ -62,4 +59,10 @@ OLLAMA_HOST=http://localhost:11434
 
 # Optional: For OpenAI or other providers
 # OPENAI_API_KEY=your_key_here
+```
+
+### 5. Run
+
+```bash
+python -m ai_browser_agent
 ```
