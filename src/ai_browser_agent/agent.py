@@ -11,10 +11,10 @@ class AIAgent:
     Класс ИИ агента выполняющего задания в браузере
     """
 
-    def __init__(self, browser_adapter: BrowserPort, llm_adapter: LLMPort):
+    def __init__(self, browser_adapter: BrowserPort, llm_adapter: LLMPort, cli):
         self.browser = browser_adapter
         self.llm = llm_adapter
-
+        self.cli = cli
 
 
 
@@ -115,7 +115,7 @@ class AIAgent:
         return dumps(functions_info, ensure_ascii=False, indent=2)
 
     async def get_step_actions_info(self, context):
-        context['current_url'] = self.browser.page
+        context['current_url'] = self.browser.page.url
         available_actions = self.get_class_func_description(self.browser)
         prompt = f"""
                 Ты - автономный AI-агент, который управляет веб-браузером для выполнения задач пользователя.
@@ -178,5 +178,5 @@ class AIAgent:
                 {available_actions}
 
                """
-        response = json.dumps(await self.send(prompt))
+        response = json.loads(await self.send(prompt))
         return response

@@ -4,7 +4,6 @@ from playwright.async_api import Page, async_playwright
 
 
 class PlaywrightBrowserAdapter(BrowserPort):
-
     def __init__(self, llm_adapter: LLMPort):
         self.browser_app = None
         self.playwright = None
@@ -16,13 +15,21 @@ class PlaywrightBrowserAdapter(BrowserPort):
         try:
             self.playwright = await async_playwright().start()
             self.browser_app = await self.playwright.chromium.launch(
-                headless=False,  # Показываем браузер
-                channel="chrome",  # Используем установленный Chrome
+                headless=False,
+                channel="chrome",
             )
             self.page = await self.new_page()
         except Exception as e:
             print(f"Не удалось запустить системный Chrome: {e}. Пробуем Chromium...")
-
+            try:
+                # ✅ Добавляем запуск Chromium
+                self.browser_app = await self.playwright.chromium.launch(
+                    headless=False  # без channel
+                )
+                self.page = await self.new_page()
+            except Exception as e2:
+                print(f"Не удалось запустить Chromium: {e2}")
+                raise
         return self.page
 
     def test(self):

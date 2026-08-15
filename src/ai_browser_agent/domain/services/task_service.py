@@ -27,14 +27,14 @@ class TaskService:
             )
 
             task = await self.get_task_from_user()
-            await self.solve(task)
+            await self.solve_task(task)
 
         except Exception as e:
             print(f"Критическая ошибка в чате: {e}")
 
     async def get_task_from_user(self) -> Task:
-        task = None
-        while not task:
+        task_description = None
+        while not task_description:
             self.cli.show_message('Какое задание мне выполнить?')
             # Асинхронный ввод вместо блокирующего input()
             message = await self.cli.get_user_input()
@@ -43,15 +43,17 @@ class TaskService:
                 continue  # Пропускаем пустые сообщения
 
             with CLI.thought_screensaver():
-                task = await self.extract_task(message)
-                if not task:
+                try:
+                    task_description = await self.extract_task(message)
+                except Exception as e:
                     self.cli.show_message("Пожалуйста, отправьте четкое задание для выполнения")
+                    continue
         task = Task(
-            description=task
+            description=task_description
         )
         return task
 
-    async def extract_task(self, message: str) -> str | None:
+    async def extract_task(self, message: str) -> str:
         """
         Пытается извлечь задачу из сообщения пользователя.
 
@@ -98,11 +100,10 @@ class TaskService:
                     if status == "ЗАДАЧА" and task_text:
                         return task_text
 
-            return None
-
+            raise Exception('Запрос не является задачей')
         except Exception as e:
             print(f"Ошибка при извлечении задачи из '{message}': {e}")
-            return None
+            raise
 
     async def solve_task(self, task:Task):
         """
@@ -128,6 +129,8 @@ class TaskService:
                 self.cli.show_message(f'Выполняю - {step}')
                 response = await self.agent.get_step_actions_info(context)
 
+                #тут надо переделать списки actions в объекты Actions
+
                 if 'thought' in response:
                     self.cli.show_message(f'Мысли - {response['thought']}')
 
@@ -143,17 +146,17 @@ class TaskService:
                 continue
         raise Exception("Не получилось выполнить задание за отведенные попытки")
 
-    async def execute_actions(self, actions:list[Action]):
+    async def execute_actions(self, actions:list):
         for action in actions:
-            self.cli.show_message(f'выполняю {action}')
+            self.cli.show_message(f'выполняю {action['name']}')
 
-            method = getattr(self.agent.browser, action.name, None)
+            method = getattr(self.agent.browser, action['name'], None)
             try:
-                with CLI.thought_screensaver(text=f'Execute {action.name}'):
+                with CLI.thought_screensaver(text=f'Execute {action['name']}'):
                     if inspect.iscoroutinefunction(method):
-                        returned = await method(**action.parameters)
+                        returned = await method(**action['parameters'])
                     else:
-                        returned = method(**action.parameters)
+                        returned = method(**action['parameters'])
 
             except AttributeError:
                 error_msg = f"Method  not found in Browser"
