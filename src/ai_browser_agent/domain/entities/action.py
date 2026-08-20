@@ -1,4 +1,7 @@
 class Action:
-    def __int__(self, name, parameters):
+    """
+    Wrapper class for action
+    """
+    def __init__(self, name, parameters):
         self.name = name
         self.parameters = parameters

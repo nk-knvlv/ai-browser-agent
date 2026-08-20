@@ -1,4 +1,5 @@
 import inspect
+from os import name
 
 from ai_browser_agent.domain.entities.task import Task
 from ai_browser_agent.domain.entities.action import Action
@@ -105,7 +106,7 @@ class TaskService:
             print(f"Ошибка при извлечении задачи из '{message}': {e}")
             raise
 
-    async def solve_task(self, task:Task):
+    async def solve_task(self, task: Task):
         """
         Алгоритм решения задачи
         """
@@ -120,7 +121,6 @@ class TaskService:
             self.cli.show_message(f'Step - {step}')
             await self.solve_step(step=step, context=task.get_context())
 
-
     async def solve_step(self, step, context):
         attempt = 0
         while attempt < 4:
@@ -129,7 +129,7 @@ class TaskService:
                 self.cli.show_message(f'Выполняю - {step}')
                 response = await self.agent.get_step_actions_info(context)
 
-                #тут надо переделать списки actions в объекты Actions
+                # тут надо переделать списки actions в объекты Actions
 
                 if 'thought' in response:
                     self.cli.show_message(f'Мысли - {response['thought']}')
@@ -139,24 +139,27 @@ class TaskService:
                 if response['actions'] == 'wait_for_the_human':
                     await self.wait_human(favour=response['thought'])
                     break
-                await self.execute_actions(actions=response['actions'])
+                if type(response['actions']) == list:
+                    actions = [Action(action['name'],action['parameters']) for action in
+                               response['actions']]
+                    await self.execute_actions(actions=actions)
 
             except Exception as e:
                 print(f"Ошибка при выполнении шага {step} сообщения: {e}")
                 continue
         raise Exception("Не получилось выполнить задание за отведенные попытки")
 
-    async def execute_actions(self, actions:list):
+    async def execute_actions(self, actions: list):
         for action in actions:
-            self.cli.show_message(f'выполняю {action['name']}')
+            self.cli.show_message(f'выполняю {action.name}')
 
-            method = getattr(self.agent.browser, action['name'], None)
+            method = getattr(self.agent.browser, action.name, None)
             try:
-                with CLI.thought_screensaver(text=f'Execute {action['name']}'):
+                with CLI.thought_screensaver(text=f'Execute {action.name}'):
                     if inspect.iscoroutinefunction(method):
-                        returned = await method(**action['parameters'])
+                        returned = await method(**action.parameters)
                     else:
-                        returned = method(**action['parameters'])
+                        returned = method(**action.parameters)
 
             except AttributeError:
                 error_msg = f"Method  not found in Browser"
@@ -184,4 +187,3 @@ class TaskService:
             response = await self.agent.llm.send(prompt)
             if response == "True":
                 favour_is_responding = True
-

@@ -20,11 +20,11 @@ async def main():
 
     # infrastructure
 
-    # llm_adapter = OllamaLLMAdapter(api_key=api_key)
-    llm_adapter = OllamaLLMAdapter(
-        model_name="qwen2.5",  # или "qwen2.5:7b", "qwen2.5:14b"
-        host="http://localhost:11434"
-    )
+    llm_adapter = GroqLLMAdapter(api_key=api_key)
+    # llm_adapter = OllamaLLMAdapter(
+    #     model_name="qwen2.5",  # или "qwen2.5:7b", "qwen2.5:14b"
+    #     host="http://localhost:11434"
+    # )
 
     await llm_adapter.test()
 
